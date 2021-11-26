@@ -8,7 +8,7 @@ export default function App() {
   const [currentAccount, setCurrentAccount] = useState("");
   const [allWaves, setAllWaves] = useState([]);
 
-  const contractAddress = "0x0B417a01591e323F889113250dC763A6784c6bc8"
+  const contractAddress = "0x9899Ea4F3Af06ab74d44FF328bF1fDd6DE3Dedd1"
 
   const contractABI = abi.abi
 
@@ -160,7 +160,7 @@ export default function App() {
           <textarea id="msgInput">
 
           </textarea>
-          <button className="waveButton" onClick={wave}>👋 here !
+          <button className="waveButton" onClick={wave}>👋 Here!
         </button>
 
         </div>
@@ -171,15 +171,19 @@ export default function App() {
           </button>
         )}
 
-        {allWaves.map((wave, index) => {
-          return (
-            <div className="msgDiv" key={index} style={{ backgroundColor: "OldLace", marginTop: "16px", padding: "8px" }}>
-              <div>Address: {wave.address}</div>
-              <div>Time: {wave.timestamp.toString()}</div>
-              <div>Message: {wave.message}</div>
+        <div className="allMsgDivs">
+          {allWaves.map((wave, index) => {
+            return (
+              <div className="msgDiv" key={index} >
+                <div className="msgBold"> <p>✉️ :      {wave.message}</p></div>
+                <div>Time: {wave.timestamp.toString()}</div>
+                <div>Address: {wave.address}</div>
 
-            </div>)
-        })}
+
+
+              </div>)
+          })}
+        </div>
       </div>
 
     </div>
