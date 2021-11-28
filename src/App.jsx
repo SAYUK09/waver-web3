@@ -5,14 +5,60 @@ import './App.css';
 import abi from "./utils/wavePortal.json"
 
 export default function App() {
+
   const [currentAccount, setCurrentAccount] = useState("");
   const [allWaves, setAllWaves] = useState([]);
+  ;
 
-  const contractAddress = "0x9899Ea4F3Af06ab74d44FF328bF1fDd6DE3Dedd1"
+  const emojis = ["😀", "😁", "🙂", "😊", "🤩", "🤑", "😎", "🤓"]
+
+
+  const contractAddress = "0x19d0128d470f9f39aa552b44218900DeBF070BDC"
 
   const contractABI = abi.abi
 
-  const checkIfWalletIsConnected = async () => {
+
+  const getAllWaves = async () => {
+    try {
+      const { ethereum } = window;
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
+      const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+      /*
+       * Call the getAllWaves method from your Smart Contract
+       */
+      const waves = await wavePortalContract.getAllWaves();
+
+      /*
+       * We only need address, timestamp, and message in our UI so let's
+       * pick those out
+       */
+      const wavesCleaned = waves.map(wave => {
+        return {
+          address: wave.waver,
+          timestamp: new Date(wave.timestamp * 1000),
+          message: wave.message
+        };
+      });
+
+      /*
+       * Store our data in React State
+       */
+      setAllWaves(wavesCleaned);
+
+    } catch (error) {
+      console.warn(error);
+    }
+  }
+
+  function cleartxtBox() {
+    document.getElementById(
+      'msgInput').value = ''
+  }
+
+useEffect(()=>{
+const checkIfWalletIsConnected = async () => {
     try {
       const { ethereum } = window;
 
@@ -37,7 +83,34 @@ export default function App() {
       console.log(error);
     }
   }
+  checkIfWalletIsConnected();
+  getAllWaves()
+}, [])
 
+
+  useEffect(() => {
+    console.log(currentAccount, "curr")
+    const { ethereum } = window;
+    const provider = new ethers.providers.Web3Provider(ethereum);
+    const signer = provider.getSigner();
+    const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+    wavePortalContract.on("NewWave", (winner, prizeAmount) => {
+
+      console.log(winner, currentAccount)
+
+      if (Number(winner) == Number(currentAccount) ) {
+        const amt = ethers.utils.formatEther(prizeAmount)
+
+        alert("Congrats! You just won  ether for waving. Check your wallet balance ");
+      } else {
+        console.log("nextTime")
+      }
+    })
+    return () => {
+      console.log("done")
+    }
+  },[])
 
   const connectWallet = async () => {
     try {
@@ -57,90 +130,43 @@ export default function App() {
     }
   }
 
-  useEffect(() => {
-    checkIfWalletIsConnected();
-  }, [])
-
-
   const wave = async () => {
     try {
-
-      const msgg = document.getElementById("msgInput").value
-
-      // const msgToBeSent =msgInpDiv.value
-      // console.log(msgInpDiv.value)
-      // setMessage(msgToBeSent)
-      // console.log(message, "msss")
-
       const { ethereum } = window;
+      const msg = document.getElementById("msgInput").value
 
       if (ethereum) {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
         const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
 
+
         let count = await wavePortalContract.getTotalWaves();
         console.log("Retrieved total wave count...", count.toNumber());
 
-        const waveTxn = await wavePortalContract.wave(msgg, { gasLimit: 300000 })
+
+        const waveTxn = await wavePortalContract.wave(msg, { gasLimit: 300000 })
         console.log("Mining...", waveTxn.hash);
-
-
 
         await waveTxn.wait();
         console.log("Mined -- ", waveTxn.hash);
 
+
         count = await wavePortalContract.getTotalWaves();
+
         console.log("Retrieved total wave count...", count.toNumber());
 
+        getAllWaves()
+        cleartxtBox()
+
       } else {
+        alert("Please connect your wallet first")
         console.log("Ethereum object doesn't exist!");
       }
     } catch (error) {
       console.log(error)
     }
   }
-
-  useEffect(() => {
-    const getAllWaves = async () => {
-      try {
-        const { ethereum } = window;
-        if (ethereum) {
-          const provider = new ethers.providers.Web3Provider(ethereum);
-          const signer = provider.getSigner();
-          const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
-
-          /*
-           * Call the getAllWaves method from your Smart Contract
-           */
-          const waves = await wavePortalContract.getAllWaves();
-
-
-          /*
-           * We only need address, timestamp, and message in our UI so let's
-           * pick those out
-           */
-          let wavesCleaned = [];
-          waves.forEach(wave => {
-            wavesCleaned.push({
-              address: wave.waver,
-              timestamp: new Date(wave.timestamp * 1000),
-              message: wave.message
-            });
-          });
-
-          setAllWaves(wavesCleaned);
-        } else {
-          console.log("Ethereum object doesn't exist!")
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    }
-    getAllWaves()
-
-  }, [allWaves])
-
 
 
   return (
@@ -156,9 +182,11 @@ export default function App() {
         </div>
 
         <div className="waverDiv">
-          <h2>Drop a cool message, cool people</h2>
-          <textarea id="msgInput">
+          <h3 >Drop a cool message & you might just get some Eth 💲</h3>
 
+          <b>Wave only once in 15 mins</b>
+          <textarea id="msgInput">
+      
           </textarea>
           <button className="waveButton" onClick={wave}>👋 Here!
         </button>
@@ -173,13 +201,14 @@ export default function App() {
 
         <div className="allMsgDivs">
           {allWaves.map((wave, index) => {
+
             return (
               <div className="msgDiv" key={index} >
-                <div className="msgBold"> <p>✉️ :      {wave.message}</p></div>
-                <div>Time: {wave.timestamp.toString()}</div>
+                <div > {emojis[Math.floor((Math.random() * 7) + 1)]}: {wave.message}</div>
+
+                <div>Time: {wave.timestamp.toString().substring(0, 25)}</div>
+
                 <div>Address: {wave.address}</div>
-
-
 
               </div>)
           })}

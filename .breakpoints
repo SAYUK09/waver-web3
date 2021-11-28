@@ -2,18 +2,18 @@
   "files": {
     "src/App.jsx": [
       {
-        "id": "e9164ef9-18bd-4b5a-85a5-d8a98346c922",
-        "line": 8,
-        "version": 957,
-        "index": 257
+        "id": "032ee67c-79c3-4641-9176-3bda6a74a4d4",
+        "line": 54,
+        "version": 3328,
+        "index": 1375
       }
     ],
     "src/utils/wavePortal.json": [
       {
         "id": "4b792951-2dea-4667-bc6b-f6e6132d260d",
-        "line": 98,
-        "version": 28,
-        "index": 15481
+        "line": 117,
+        "version": 39,
+        "index": 20369
       }
     ]
   }
